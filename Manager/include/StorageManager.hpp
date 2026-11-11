@@ -1,3 +1,4 @@
+#pragma once
 #include <nlohmann/json.hpp>
 #include <iostream>
 #include <string>
@@ -18,7 +19,7 @@ public:
     StorageManager(std::filesystem::path filePath);
     ~StorageManager();
 
-    bool fileExists(std::filesystem::path filePath);
+    bool fileExists(std::filesystem::path filePath) const;
     void validateStream();
 
     std::unordered_map<std::string, Command> loadCommands();

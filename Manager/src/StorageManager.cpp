@@ -39,7 +39,7 @@ StorageManager::StorageManager(std::filesystem::path filePath)
     }
 }
 
-bool StorageManager::fileExists(std::filesystem::path filePath)
+bool StorageManager::fileExists(std::filesystem::path filePath) const
 {
     return std::filesystem::exists(filePath);
 }
