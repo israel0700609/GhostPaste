@@ -12,6 +12,7 @@ private:
     int usage_count;
 
 public:
+    Command();
     Command(const std::string &trigger, const std::string &value,
             const std::string &description = "",
             bool is_case_sensitive = false,

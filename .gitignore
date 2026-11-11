@@ -1,0 +1,44 @@
+# --- CMake Build & Output Directories ---
+build/
+bin/
+out/
+build-*/
+
+# --- CMake Generated Files ---
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+install_manifest.txt
+_deps/
+*.cmake
+
+# --- Compiled Object & Binary Files ---
+*.obj
+*.o
+*.exe
+*.dll
+*.lib
+*.a
+*.exp
+*.pdb
+*.ilk
+*.suo
+
+# --- vcpkg Local Packages ---
+vcpkg_installed/
+
+
+# --- IDEs & Editors ---
+.vscode/
+.vs/
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+.idea/
+*.swp
+*.swo
+
+# --- OS Specific Files ---
+.DS_Store
+Thumbs.db
+desktop.ini

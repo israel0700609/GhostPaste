@@ -1,23 +1,38 @@
 #include "StorageManager.hpp"
+#include <fstream>
+#include <iostream>
 
 StorageManager::StorageManager(std::filesystem::path filePath)
 {
-    if (!fileExists(filePath))
+#ifdef PROJECT_SOURCE_DIR
+    if (filePath.is_relative())
     {
-        if (filePath.has_parent_path() && !std::filesystem::exists(filePath.parent_path()))
+        file_path = std::filesystem::path(PROJECT_SOURCE_DIR) / filePath;
+    }
+    else
+    {
+        file_path = filePath;
+    }
+#else
+    file_path = filePath;
+#endif
+
+    if (!fileExists(file_path))
+    {
+        if (file_path.has_parent_path() && !std::filesystem::exists(file_path.parent_path()))
         {
-            std::filesystem::create_directories(filePath.parent_path());
+            std::filesystem::create_directories(file_path.parent_path());
         }
 
-        std::ofstream initFile(filePath);
+        std::ofstream initFile(file_path);
         initFile << "{}";
         initFile.close();
     }
 
-    config_file.open(filePath, std::ios::in | std::ios::out | std::ios::binary);
+    config_file.open(file_path, std::ios::in | std::ios::out | std::ios::binary);
     if (!config_file.is_open())
     {
-        throw std::runtime_error("Could not open config File(" + filePath.string() + "). Check for permissions and locks.");
+        throw std::runtime_error("Could not open config File(" + file_path.string() + "). Check for permissions and locks.");
     }
 
     try
@@ -67,6 +82,7 @@ void StorageManager::validateStream()
         }
     }
 }
+
 std::unordered_map<std::string, Command> StorageManager::loadCommands()
 {
     validateStream();
@@ -113,11 +129,18 @@ bool StorageManager::dumpCommands(const std::unordered_map<std::string, Command>
             json_config_file[key] = Util::serialize(command);
         }
 
-        config_file.seekp(0, std::ios::beg);
+        config_file.close();
 
-        config_file << json_config_file.dump(4);
+        std::ofstream outFile(file_path, std::ios::trunc);
+        if (!outFile.is_open())
+        {
+            throw std::runtime_error("Failed to open file for dumping.");
+        }
 
-        config_file.flush();
+        outFile << json_config_file.dump(4);
+        outFile.close();
+
+        config_file.open(file_path, std::ios::in | std::ios::out | std::ios::binary);
 
         return true;
     }
@@ -126,4 +149,8 @@ bool StorageManager::dumpCommands(const std::unordered_map<std::string, Command>
         std::cerr << "Error: Failed to dump commands to disk. Details: " << e.what() << "\n";
         return false;
     }
+}
+
+StorageManager::~StorageManager()
+{
 }

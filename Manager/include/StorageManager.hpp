@@ -12,6 +12,7 @@ class StorageManager
 {
 
 private:
+    std::filesystem::path file_path;
     std::fstream config_file;
     nlohmann::json json_config_file;
 

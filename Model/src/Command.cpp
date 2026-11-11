@@ -1,5 +1,8 @@
 #include "Command.hpp"
 
+Command::Command() : trigger(""), value(""), description(""),
+                     is_case_sensitive(false), enabled(true), usage_count(0) {}
+
 Command::Command(const std::string &trigger, const std::string &value,
                  const std::string &description,
                  bool is_case_sensitive,
