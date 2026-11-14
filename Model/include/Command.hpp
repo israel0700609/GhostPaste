@@ -1,6 +1,27 @@
 #pragma once
 #include <string>
+#include <iostream>
 
+enum class CommandType
+{
+    ADD,
+    UPDATE,
+    REMOVE,
+    LIST,
+    INFO,
+    ENABLE,
+    DISABLE,
+    CASE_SENSITIVE,
+    TIMEOUT,
+    UNTIMEOUT,
+    RELOAD,
+    EXPORT,
+    IMPORT,
+    CLEAR,
+    HELP,
+    EXIT,
+    UNKNOWN
+};
 class Command
 {
 private:

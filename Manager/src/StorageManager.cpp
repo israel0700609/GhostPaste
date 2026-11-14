@@ -35,23 +35,7 @@ StorageManager::StorageManager(std::filesystem::path filePath)
         throw std::runtime_error("Could not open config File(" + file_path.string() + "). Check for permissions and locks.");
     }
 
-    try
-    {
-        config_file.seekg(0, std::ios::beg);
-
-        if (config_file.peek() == std::ifstream::traits_type::eof())
-        {
-            json_config_file = nlohmann::json::object();
-        }
-        else
-        {
-            config_file >> json_config_file;
-        }
-    }
-    catch (const nlohmann::json::parse_error &e)
-    {
-        json_config_file = nlohmann::json::object();
-    }
+    readConfigToJson();
 }
 
 bool StorageManager::fileExists(std::filesystem::path filePath) const
@@ -86,6 +70,7 @@ void StorageManager::validateStream()
 std::unordered_map<std::string, Command> StorageManager::loadCommands()
 {
     validateStream();
+    readConfigToJson();
 
     std::unordered_map<std::string, Command> commands;
     try
@@ -153,4 +138,41 @@ bool StorageManager::dumpCommands(const std::unordered_map<std::string, Command>
 
 StorageManager::~StorageManager()
 {
+    try
+    {
+        if (config_file.is_open())
+        {
+            config_file.flush();
+            config_file.close();
+        }
+    }
+    catch (...)
+    {
+    }
+}
+void StorageManager::clear()
+{
+    dumpCommands({});
+}
+
+void StorageManager::readConfigToJson()
+{
+    validateStream();
+    try
+    {
+        config_file.seekg(0, std::ios::beg);
+
+        if (config_file.peek() == std::ifstream::traits_type::eof())
+        {
+            json_config_file = nlohmann::json::object();
+        }
+        else
+        {
+            config_file >> json_config_file;
+        }
+    }
+    catch (const nlohmann::json::parse_error &e)
+    {
+        json_config_file = nlohmann::json::object();
+    }
 }

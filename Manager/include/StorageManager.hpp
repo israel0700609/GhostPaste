@@ -22,7 +22,13 @@ public:
 
     bool fileExists(std::filesystem::path filePath) const;
     void validateStream();
-
+    void readConfigToJson();
     std::unordered_map<std::string, Command> loadCommands();
     bool dumpCommands(const std::unordered_map<std::string, Command> &commands);
+    std::filesystem::path getFilePath()
+    {
+        return file_path;
+    }
+
+    void clear();
 };
