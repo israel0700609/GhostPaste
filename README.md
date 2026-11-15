@@ -94,7 +94,7 @@ GhostPaste/
 
 ```powershell
 # 1. Clone the repository
-git clone [https://github.com/your-username/GhostPaste.git](https://github.com/your-username/GhostPaste.git)
+git clone [https://github.com/israel0700609/GhostPaste.git](https://github.com/israel0700609/GhostPaste.git)
 cd GhostPaste
 
 # 2. Configure the build directory with CMake
@@ -174,4 +174,5 @@ Macros are stored in human-readable JSON format and loaded automatically on star
         "usage_count": 14,
         "value": "contact@exmaple.com"
     }
-}```
+}
+```
