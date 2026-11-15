@@ -1,11 +1,14 @@
 #pragma once
+
 #include "nlohmann/json.hpp"
 #include "Command.hpp"
 #include <unordered_map>
 #include <charconv>
 #include <sstream>
-#include "MacroManager.hpp"
-#include "StorageManager.hpp"
+
+class MacroManager;
+class StorageManager;
+
 class Util
 {
 public:

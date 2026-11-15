@@ -19,6 +19,7 @@ add_executable(GhostPaste
     Manager/src/KeyboardHook.cpp
     Manager/src/KeyBuffer.cpp
     Manager/src/TextInjector.cpp
+    Manager/src/AutoSaver.cpp
     
 )
 

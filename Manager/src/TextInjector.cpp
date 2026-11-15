@@ -6,27 +6,28 @@
 
 void TextInjector::replaceText(size_t eraseCount, const std::string &replacementText)
 {
-    eraseCharacters(eraseCount);
+    std::thread([eraseCount, replacementText]()
+                {
+        eraseCharacters(eraseCount);
 
-    std::optional<std::wstring> previousClipboard = getClipboardText();
+        std::optional<std::wstring> previousClipboard = getClipboardText();
 
-    std::wstring wideText = utf8ToWide(replacementText);
-    if (!setClipboardText(wideText))
-    {
-        return;
-    }
+        std::wstring wideText = utf8ToWide(replacementText);
+        if (!setClipboardText(wideText))
+        {
+            return;
+        }
 
-    sendCtrlV();
+        Sleep(15);
 
-    if (previousClipboard.has_value())
-    {
-        std::wstring backup = std::move(*previousClipboard);
-        std::thread([backup = std::move(backup)]()
-                    {
-            Sleep(60); 
-            setClipboardText(backup); })
-            .detach();
-    }
+        sendCtrlV();
+
+        if (previousClipboard.has_value())
+        {
+            Sleep(150);
+            setClipboardText(*previousClipboard);
+        } })
+        .detach();
 }
 
 void TextInjector::eraseCharacters(size_t count)
@@ -36,14 +37,18 @@ void TextInjector::eraseCharacters(size_t count)
         return;
     }
 
+    WORD backScan = static_cast<WORD>(MapVirtualKeyA(VK_BACK, MAPVK_VK_TO_VSC));
     std::vector<INPUT> inputs(count * 2, INPUT{});
+
     for (size_t i = 0; i < count; ++i)
     {
         inputs[i * 2].type = INPUT_KEYBOARD;
         inputs[i * 2].ki.wVk = VK_BACK;
+        inputs[i * 2].ki.wScan = backScan;
 
         inputs[i * 2 + 1].type = INPUT_KEYBOARD;
         inputs[i * 2 + 1].ki.wVk = VK_BACK;
+        inputs[i * 2 + 1].ki.wScan = backScan;
         inputs[i * 2 + 1].ki.dwFlags = KEYEVENTF_KEYUP;
     }
 
@@ -52,28 +57,77 @@ void TextInjector::eraseCharacters(size_t count)
 
 void TextInjector::sendCtrlV()
 {
-    INPUT inputs[4] = {};
+    WORD ctrlScan = static_cast<WORD>(MapVirtualKeyA(VK_CONTROL, MAPVK_VK_TO_VSC));
+    WORD vScan = static_cast<WORD>(MapVirtualKeyA('V', MAPVK_VK_TO_VSC));
 
-    inputs[0].type = INPUT_KEYBOARD;
-    inputs[0].ki.wVk = VK_CONTROL;
+    std::vector<INPUT> inputs;
+    inputs.reserve(8);
 
-    inputs[1].type = INPUT_KEYBOARD;
-    inputs[1].ki.wVk = 'V';
+    if ((GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0)
+    {
+        INPUT shiftUp = {};
+        shiftUp.type = INPUT_KEYBOARD;
+        shiftUp.ki.wVk = VK_SHIFT;
+        shiftUp.ki.dwFlags = KEYEVENTF_KEYUP;
+        inputs.push_back(shiftUp);
+    }
+    if ((GetAsyncKeyState(VK_MENU) & 0x8000) != 0)
+    {
+        INPUT altUp = {};
+        altUp.type = INPUT_KEYBOARD;
+        altUp.ki.wVk = VK_MENU;
+        altUp.ki.dwFlags = KEYEVENTF_KEYUP;
+        inputs.push_back(altUp);
+    }
 
-    inputs[2].type = INPUT_KEYBOARD;
-    inputs[2].ki.wVk = 'V';
-    inputs[2].ki.dwFlags = KEYEVENTF_KEYUP;
+    INPUT ctrlDown = {};
+    ctrlDown.type = INPUT_KEYBOARD;
+    ctrlDown.ki.wVk = VK_CONTROL;
+    ctrlDown.ki.wScan = ctrlScan;
+    inputs.push_back(ctrlDown);
 
-    inputs[3].type = INPUT_KEYBOARD;
-    inputs[3].ki.wVk = VK_CONTROL;
-    inputs[3].ki.dwFlags = KEYEVENTF_KEYUP;
+    INPUT vDown = {};
+    vDown.type = INPUT_KEYBOARD;
+    vDown.ki.wVk = 'V';
+    vDown.ki.wScan = vScan;
+    inputs.push_back(vDown);
 
-    SendInput(4, inputs, sizeof(INPUT));
+    INPUT vUp = {};
+    vUp.type = INPUT_KEYBOARD;
+    vUp.ki.wVk = 'V';
+    vUp.ki.wScan = vScan;
+    vUp.ki.dwFlags = KEYEVENTF_KEYUP;
+    inputs.push_back(vUp);
+
+    INPUT ctrlUp = {};
+    ctrlUp.type = INPUT_KEYBOARD;
+    ctrlUp.ki.wVk = VK_CONTROL;
+    ctrlUp.ki.wScan = ctrlScan;
+    ctrlUp.ki.dwFlags = KEYEVENTF_KEYUP;
+    inputs.push_back(ctrlUp);
+
+    SendInput(static_cast<UINT>(inputs.size()), inputs.data(), sizeof(INPUT));
 }
 
 std::optional<std::wstring> TextInjector::getClipboardText()
 {
-    if (!IsClipboardFormatAvailable(CF_UNICODETEXT) || !OpenClipboard(nullptr))
+    if (!IsClipboardFormatAvailable(CF_UNICODETEXT))
+    {
+        return std::nullopt;
+    }
+
+    bool opened = false;
+    for (int attempt = 0; attempt < 5; ++attempt)
+    {
+        if (OpenClipboard(nullptr))
+        {
+            opened = true;
+            break;
+        }
+        Sleep(5);
+    }
+
+    if (!opened)
     {
         return std::nullopt;
     }
@@ -96,7 +150,18 @@ std::optional<std::wstring> TextInjector::getClipboardText()
 
 bool TextInjector::setClipboardText(const std::wstring &text)
 {
-    if (!OpenClipboard(nullptr))
+    bool opened = false;
+    for (int attempt = 0; attempt < 5; ++attempt)
+    {
+        if (OpenClipboard(nullptr))
+        {
+            opened = true;
+            break;
+        }
+        Sleep(5);
+    }
+
+    if (!opened)
     {
         return false;
     }

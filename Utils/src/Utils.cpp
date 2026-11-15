@@ -1,5 +1,7 @@
 
 #include "Utils.hpp"
+#include "MacroManager.hpp"
+#include "StorageManager.hpp"
 
 Command Util::deserialize(nlohmann::json &jsonCommand)
 {
