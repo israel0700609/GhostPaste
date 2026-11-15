@@ -1,4 +1,4 @@
-# --- CMake Build & Output Directories ---
+﻿# --- CMake Build & Output Directories ---
 build/
 bin/
 out/
@@ -42,5 +42,4 @@ vcpkg_installed/
 .DS_Store
 Thumbs.db
 desktop.ini
-
-
+data/config.json
