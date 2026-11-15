@@ -16,6 +16,7 @@ add_executable(GhostPaste
     Manager/src/StorageManager.cpp
     Utils/src/Utils.cpp
     Manager/src/CommandLoop.cpp
+    Manager/src/KeyboardHook.cpp
 )
 
 target_link_libraries(GhostPaste PRIVATE nlohmann_json::nlohmann_json)
