@@ -4,7 +4,6 @@
 #include <functional>
 #include <thread>
 #include <atomic>
-#include <vector>
 
 enum class KeyEventType
 {
@@ -16,8 +15,7 @@ enum class KeyEventType
 class KeyboardHook
 {
 public:
-    using KeyCallback = std::function<void(KeyEventType type, char ch)>;
-
+    using KeyCallback = std::function<bool(KeyEventType type, char ch)>;
     KeyboardHook();
     ~KeyboardHook();
 
@@ -27,12 +25,11 @@ public:
     void setCallback(KeyCallback callback);
     void start();
     void stop();
-    void eraseCharacters(size_t count);
 
 private:
     void hookThreadLoop();
     static LRESULT CALLBACK lowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
-    static void translateAndDispatch(const KBDLLHOOKSTRUCT *kbdStruct);
+    static bool translateAndDispatch(const KBDLLHOOKSTRUCT *kbdStruct);
 
     static KeyboardHook *instance;
 

@@ -85,28 +85,30 @@ LRESULT CALLBACK KeyboardHook::lowLevelKeyboardProc(int nCode, WPARAM wParam, LP
 
         if ((kbdStruct->flags & LLKHF_INJECTED) == 0 && instance && instance->callback)
         {
-            translateAndDispatch(kbdStruct);
+            if (translateAndDispatch(kbdStruct))
+            {
+                return 1;
+            }
         }
     }
 
     return CallNextHookEx(nullptr, nCode, wParam, lParam);
 }
-
-void KeyboardHook::translateAndDispatch(const KBDLLHOOKSTRUCT *kbdStruct)
+bool KeyboardHook::translateAndDispatch(const KBDLLHOOKSTRUCT *kbdStruct)
 {
     DWORD vkCode = kbdStruct->vkCode;
 
     if (vkCode == VK_BACK)
     {
         instance->callback(KeyEventType::BACKSPACE, '\0');
-        return;
+        return false;
     }
 
     if (vkCode == VK_RETURN || vkCode == VK_TAB || vkCode == VK_ESCAPE ||
         (vkCode >= VK_LEFT && vkCode <= VK_DOWN))
     {
         instance->callback(KeyEventType::RESET, '\0');
-        return;
+        return false;
     }
 
     bool ctrlPressed = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
@@ -114,7 +116,7 @@ void KeyboardHook::translateAndDispatch(const KBDLLHOOKSTRUCT *kbdStruct)
     if (ctrlPressed || altPressed)
     {
         instance->callback(KeyEventType::RESET, '\0');
-        return;
+        return false;
     }
 
     BYTE keyboardState[256] = {0};
@@ -132,28 +134,8 @@ void KeyboardHook::translateAndDispatch(const KBDLLHOOKSTRUCT *kbdStruct)
 
     if (result == 1 && unicodeBuffer[0] >= 32 && unicodeBuffer[0] <= 126)
     {
-        instance->callback(KeyEventType::CHARACTER, static_cast<char>(unicodeBuffer[0]));
-    }
-}
-
-void KeyboardHook::eraseCharacters(size_t count)
-{
-    if (count == 0)
-    {
-        return;
+        return instance->callback(KeyEventType::CHARACTER, static_cast<char>(unicodeBuffer[0]));
     }
 
-    std::vector<INPUT> inputs(count * 2, INPUT{});
-
-    for (size_t i = 0; i < count; ++i)
-    {
-        inputs[i * 2].type = INPUT_KEYBOARD;
-        inputs[i * 2].ki.wVk = VK_BACK;
-
-        inputs[i * 2 + 1].type = INPUT_KEYBOARD;
-        inputs[i * 2 + 1].ki.wVk = VK_BACK;
-        inputs[i * 2 + 1].ki.dwFlags = KEYEVENTF_KEYUP;
-    }
-
-    SendInput(static_cast<UINT>(inputs.size()), inputs.data(), sizeof(INPUT));
+    return false;
 }
