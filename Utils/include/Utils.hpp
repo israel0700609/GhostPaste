@@ -22,4 +22,5 @@ public:
     static bool collectClearCommand();
     static std::string collectTrigger(const std::string &input);
     static std::string collectFilePath(const std::string &input);
+    static bool endsWith(const std::string &buffer, const std::string &trigger, bool caseSensitive);
 };

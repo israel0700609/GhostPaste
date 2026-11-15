@@ -26,3 +26,4 @@ void Command::setDescription(const std::string &description) { this->description
 void Command::setCaseSensitive(bool case_sensitive) { this->is_case_sensitive = case_sensitive; }
 void Command::setEnabled(bool enabled) { this->enabled = enabled; }
 void Command::setUsageCount(int usage_count) { this->usage_count = usage_count; }
+void Command::incrementUsageCount() { this->usage_count += 1; }

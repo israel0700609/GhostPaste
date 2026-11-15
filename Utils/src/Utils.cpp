@@ -366,3 +366,25 @@ std::string Util::collectFilePath(const std::string &input)
 
     return filePath;
 }
+
+bool Util::endsWith(const std::string &buffer, const std::string &trigger, bool caseSensitive)
+{
+    if (trigger.empty() || buffer.size() < trigger.size())
+    {
+        return false;
+    }
+
+    std::string_view suffix(buffer.data() + (buffer.size() - trigger.size()), trigger.size());
+
+    if (caseSensitive)
+    {
+        return suffix == trigger;
+    }
+
+    return std::equal(suffix.begin(), suffix.end(), trigger.begin(),
+                      [](char a, char b)
+                      {
+                          return std::tolower(static_cast<unsigned char>(a)) ==
+                                 std::tolower(static_cast<unsigned char>(b));
+                      });
+}

@@ -7,6 +7,8 @@ MacroManager::MacroManager(const std::unordered_map<std::string, Command> &comma
 
 void MacroManager::addCommand(const std::string &key, const Command &command)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
     if (commands.find(key) != commands.end())
     {
         std::cerr << "Error: Trigger " << key
@@ -20,6 +22,8 @@ void MacroManager::addCommand(const std::string &key, const Command &command)
 
 void MacroManager::removeCommand(const std::string &key)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
     if (commands.erase(key) > 0)
     {
         is_dirty = true;
@@ -28,27 +32,34 @@ void MacroManager::removeCommand(const std::string &key)
 
 void MacroManager::updateCommand(const std::string &key, const Command &command)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
     commands[key] = command;
     is_dirty = true;
 }
 
-const std::unordered_map<std::string, Command> &MacroManager::getCommands() const
+const std::unordered_map<std::string, Command> MacroManager::getCommands() const
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
     return commands;
 }
 
 bool MacroManager::isDirty() const
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
     return is_dirty;
 }
 
 void MacroManager::clearIsDirty()
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
     is_dirty = false;
 }
 
 std::optional<Command> MacroManager::findCommand(const std::string &key)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
     auto it = commands.find(key);
     std::optional<Command> optionalCommand = std::nullopt;
 
@@ -62,12 +73,13 @@ std::optional<Command> MacroManager::findCommand(const std::string &key)
 
 void MacroManager::enableCommand(const std::string &key, bool enabled, const std::string &prompt)
 {
-    std::optional<Command> command = findCommand(key);
+    std::lock_guard<std::mutex> lock(m_mutex);
 
-    if (command)
+    auto it = commands.find(key);
+    if (it != commands.end())
     {
         std::string out = prompt == "enable" ? "enabled" : "disabled";
-        commands[key].setEnabled(enabled);
+        it->second.setEnabled(enabled);
         std::cout << "Command " << key << " " << out << std::endl;
         is_dirty = true;
         return;
@@ -75,9 +87,10 @@ void MacroManager::enableCommand(const std::string &key, bool enabled, const std
 
     std::cout << "Could not " << prompt << " command " << key << std::endl;
 }
-
 void MacroManager::caseSensitive(const std::string &key)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
     auto it = commands.find(key);
     if (it != commands.end())
     {
@@ -93,21 +106,32 @@ void MacroManager::caseSensitive(const std::string &key)
 }
 void MacroManager::setCommands(const std::unordered_map<std::string, Command> &commands)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
     this->commands = commands;
     is_dirty = true;
 }
 
 void MacroManager::clear()
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
     is_dirty = true;
     commands.clear();
 }
 
+bool MacroManager::isTimedoutUnlocked() const
+{
+    return std::chrono::steady_clock::now() < timeoutUntil;
+}
+
 void MacroManager::setTimeout(int mintues)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
     if (mintues <= 0)
     {
-        clearTimeout();
+        timeoutUntil = std::chrono::steady_clock::time_point::min();
         return;
     }
 
@@ -116,17 +140,21 @@ void MacroManager::setTimeout(int mintues)
 
 void MacroManager::clearTimeout()
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
     timeoutUntil = std::chrono::steady_clock::time_point::min();
 }
 
 bool MacroManager::isTimedout() const
 {
-    return std::chrono::steady_clock::now() < timeoutUntil;
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return isTimedoutUnlocked();
 }
 
 long long MacroManager::getRemainingTimeoutSeconds() const
 {
-    if (!isTimedout())
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if (!isTimedoutUnlocked())
     {
         return 0;
     }
@@ -134,4 +162,25 @@ long long MacroManager::getRemainingTimeoutSeconds() const
     auto remaining = std::chrono::duration_cast<std::chrono::seconds>(
         timeoutUntil - std::chrono::steady_clock::now());
     return remaining.count();
+}
+
+std::unordered_map<std::string, Command> MacroManager::getCommandsSnapshot() const
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if (isTimedoutUnlocked())
+    {
+        return {};
+    }
+    return commands;
+}
+
+void MacroManager::incrementCommandUsage(const std::string &key)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    auto it = commands.find(key);
+    if (it != commands.end())
+    {
+        it->second.incrementUsageCount();
+        is_dirty = true;
+    }
 }

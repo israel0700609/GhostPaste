@@ -53,4 +53,5 @@ public:
     void setCaseSensitive(bool case_sensitive);
     void setEnabled(bool enabled);
     void setUsageCount(int usage_count);
+    void incrementUsageCount();
 };
