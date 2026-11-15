@@ -1,1 +1,10 @@
-{}
+{
+    "!email": {
+        "description": "main email",
+        "enabled": true,
+        "is_case_sensitive": true,
+        "trigger": "!email",
+        "usage_count": 0,
+        "value": "israel070609@gmail.com"
+    }
+}

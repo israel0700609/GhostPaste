@@ -388,3 +388,14 @@ bool Util::endsWith(const std::string &buffer, const std::string &trigger, bool 
                                  std::tolower(static_cast<unsigned char>(b));
                       });
 }
+
+void Util::saveChangesToDisk(MacroManager &macroManager, StorageManager &storageManager)
+{
+    if (macroManager.isDirty())
+    {
+        if (storageManager.dumpCommands(macroManager.getCommands()))
+        {
+            macroManager.clearIsDirty();
+        }
+    }
+}

@@ -12,7 +12,7 @@ private:
     bool is_dirty = false;
     std::chrono::steady_clock::time_point timeoutUntil;
     mutable std::mutex m_mutex;
-    bool MacroManager::isTimedoutUnlocked() const;
+    bool isTimedoutUnlocked() const;
 
 public:
     MacroManager(const std::unordered_map<std::string, Command> &commands);

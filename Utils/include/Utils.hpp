@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <charconv>
 #include <sstream>
+#include "MacroManager.hpp"
+#include "StorageManager.hpp"
 class Util
 {
 public:
@@ -23,4 +25,5 @@ public:
     static std::string collectTrigger(const std::string &input);
     static std::string collectFilePath(const std::string &input);
     static bool endsWith(const std::string &buffer, const std::string &trigger, bool caseSensitive);
+    static void saveChangesToDisk(MacroManager &macroManager, StorageManager &storageManager);
 };

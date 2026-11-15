@@ -17,6 +17,9 @@ add_executable(GhostPaste
     Utils/src/Utils.cpp
     Manager/src/CommandLoop.cpp
     Manager/src/KeyboardHook.cpp
+    Manager/src/KeyBuffer.cpp
+    Manager/src/TextInjector.cpp
+    
 )
 
 target_link_libraries(GhostPaste PRIVATE nlohmann_json::nlohmann_json)
