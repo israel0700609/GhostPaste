@@ -4,6 +4,7 @@
 #include <functional>
 #include <thread>
 #include <atomic>
+#include <vector>
 
 enum class KeyEventType
 {
@@ -26,6 +27,7 @@ public:
     void setCallback(KeyCallback callback);
     void start();
     void stop();
+    void eraseCharacters(size_t count);
 
 private:
     void hookThreadLoop();

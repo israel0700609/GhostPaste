@@ -135,3 +135,25 @@ void KeyboardHook::translateAndDispatch(const KBDLLHOOKSTRUCT *kbdStruct)
         instance->callback(KeyEventType::CHARACTER, static_cast<char>(unicodeBuffer[0]));
     }
 }
+
+void KeyboardHook::eraseCharacters(size_t count)
+{
+    if (count == 0)
+    {
+        return;
+    }
+
+    std::vector<INPUT> inputs(count * 2, INPUT{});
+
+    for (size_t i = 0; i < count; ++i)
+    {
+        inputs[i * 2].type = INPUT_KEYBOARD;
+        inputs[i * 2].ki.wVk = VK_BACK;
+
+        inputs[i * 2 + 1].type = INPUT_KEYBOARD;
+        inputs[i * 2 + 1].ki.wVk = VK_BACK;
+        inputs[i * 2 + 1].ki.dwFlags = KEYEVENTF_KEYUP;
+    }
+
+    SendInput(static_cast<UINT>(inputs.size()), inputs.data(), sizeof(INPUT));
+}
